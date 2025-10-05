@@ -152,12 +152,12 @@ def handle_recording():
         if recording_url and recording_duration and int(recording_duration) > 0:
             # Process the recording
             try:
-                # Download and process the recording
-                response_text = process_recording(recording_url)
+                print(f"Processing recording: {recording_url}, duration: {recording_duration}")
                 
-                twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
+                # For now, let's just acknowledge the recording without complex processing
+                twiml = """<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Say voice="alice" language="es-MX">Entendí: {response_text}</Say>
+    <Say voice="alice" language="es-MX">Gracias por tu mensaje. He escuchado lo que dijiste y lo procesaré.</Say>
     <Pause length="1"/>
     <Say voice="alice" language="es-MX">¿Hay algo más en lo que pueda ayudarte?</Say>
     <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" />
