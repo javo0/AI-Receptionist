@@ -135,15 +135,21 @@ def handle_incoming_call():
         # Generate natural human-like greeting
         greeting = generate_ai_response("Eres una recepcionista humana real, no un robot. Saluda de manera natural, cálida y personal como si fueras una persona real. Pregunta cómo puedes ayudar de forma conversacional.")
         
-        # Generate TwiML response with better configuration
+        # Generate TwiML response for real conversation
         twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice" language="es-MX">{greeting}</Say>
-    <Pause length="2"/>
+    <Pause length="1"/>
     <Say voice="alice" language="es-MX">¿En qué puedo ayudarte hoy?</Say>
-    <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" 
-            recordingStatusCallback="/webhook/recording-status" 
-            recordingStatusCallbackMethod="POST" />
+    <Gather numDigits="1" timeout="10" action="/webhook/gather" method="POST">
+        <Say voice="alice" language="es-MX">Por favor, presiona 1 si necesitas información, 2 para hablar con alguien, o 3 para dejar un mensaje.</Say>
+    </Gather>
+    <Say voice="alice" language="es-MX">No recibí tu respuesta. ¿En qué puedo ayudarte?</Say>
+    <Gather numDigits="1" timeout="10" action="/webhook/gather" method="POST">
+        <Say voice="alice" language="es-MX">Presiona 1 para información, 2 para hablar con alguien, o 3 para dejar un mensaje.</Say>
+    </Gather>
+    <Say voice="alice" language="es-MX">Gracias por llamar. ¡Que tengas un buen día!</Say>
+    <Hangup/>
 </Response>"""
         
         return Response(twiml, mimetype='text/xml')
@@ -154,9 +160,83 @@ def handle_incoming_call():
         twiml = """<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice" language="es-MX">Hola, soy tu recepcionista virtual. ¿En qué puedo ayudarte?</Say>
+    <Pause length="1"/>
+    <Say voice="alice" language="es-MX">¿En qué puedo ayudarte hoy?</Say>
+    <Gather numDigits="1" timeout="10" action="/webhook/gather" method="POST">
+        <Say voice="alice" language="es-MX">Presiona 1 para información, 2 para hablar con alguien, o 3 para dejar un mensaje.</Say>
+    </Gather>
+    <Say voice="alice" language="es-MX">Gracias por llamar. ¡Que tengas un buen día!</Say>
+    <Hangup/>
+</Response>"""
+        return Response(twiml, mimetype='text/xml')
+
+@app.route('/webhook/gather', methods=['POST'])
+def handle_gather():
+    """Handle user input from Gather"""
+    try:
+        digits = request.form.get('Digits')
+        call_sid = request.form.get('CallSid')
+        
+        print(f"📱 User pressed: {digits} for call {call_sid}")
+        
+        if digits == '1':
+            # Information request
+            response_text = generate_ai_response("El visitante pidió información. Proporciona información útil sobre la empresa.")
+            twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="alice" language="es-MX">{response_text}</Say>
+    <Pause length="1"/>
+    <Say voice="alice" language="es-MX">¿Hay algo más en lo que pueda ayudarte?</Say>
+    <Gather numDigits="1" timeout="10" action="/webhook/gather" method="POST">
+        <Say voice="alice" language="es-MX">Presiona 1 para más información, 2 para hablar con alguien, o 3 para dejar un mensaje.</Say>
+    </Gather>
+    <Say voice="alice" language="es-MX">Gracias por llamar. ¡Que tengas un buen día!</Say>
+    <Hangup/>
+</Response>"""
+        elif digits == '2':
+            # Talk to someone
+            twiml = """<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="alice" language="es-MX">Perfecto, te voy a conectar con alguien que pueda ayudarte mejor.</Say>
     <Pause length="2"/>
-    <Say voice="alice" language="es-MX">Por favor, habla después del tono.</Say>
-    <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" />
+    <Say voice="alice" language="es-MX">Por favor, espera mientras te transfiero.</Say>
+    <Hangup/>
+</Response>"""
+        elif digits == '3':
+            # Leave a message
+            twiml = """<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="alice" language="es-MX">Perfecto, puedes dejar tu mensaje después del tono.</Say>
+    <Record maxLength="60" timeout="10" action="/webhook/recording" method="POST" />
+    <Say voice="alice" language="es-MX">Gracias por tu mensaje. Lo procesaré y me pondré en contacto contigo pronto.</Say>
+    <Hangup/>
+</Response>"""
+        else:
+            # Invalid option
+            twiml = """<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="alice" language="es-MX">Lo siento, no entendí tu opción.</Say>
+    <Pause length="1"/>
+    <Say voice="alice" language="es-MX">¿En qué puedo ayudarte hoy?</Say>
+    <Gather numDigits="1" timeout="10" action="/webhook/gather" method="POST">
+        <Say voice="alice" language="es-MX">Presiona 1 para información, 2 para hablar con alguien, o 3 para dejar un mensaje.</Say>
+    </Gather>
+    <Say voice="alice" language="es-MX">Gracias por llamar. ¡Que tengas un buen día!</Say>
+    <Hangup/>
+</Response>"""
+        
+        return Response(twiml, mimetype='text/xml')
+        
+    except Exception as e:
+        print(f"Error handling gather: {e}")
+        twiml = """<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="alice" language="es-MX">Lo siento, hubo un problema. ¿En qué puedo ayudarte?</Say>
+    <Gather numDigits="1" timeout="10" action="/webhook/gather" method="POST">
+        <Say voice="alice" language="es-MX">Presiona 1 para información, 2 para hablar con alguien, o 3 para dejar un mensaje.</Say>
+    </Gather>
+    <Say voice="alice" language="es-MX">Gracias por llamar. ¡Que tengas un buen día!</Say>
+    <Hangup/>
 </Response>"""
         return Response(twiml, mimetype='text/xml')
 
