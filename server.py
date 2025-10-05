@@ -15,7 +15,7 @@ app = Flask(__name__)
 # Configuration
 CLAUDE_API_KEY = os.getenv('CLAUDE_API_KEY', 'YOUR_CLAUDE_API_KEY')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', 'YOUR_OPENAI_API_KEY')
-AI_PROVIDER = os.getenv('AI_PROVIDER', 'claude')
+AI_PROVIDER = os.getenv('AI_PROVIDER', 'openai')
 
 def generate_ai_response(message):
     """Generate AI response using Claude or OpenAI"""
