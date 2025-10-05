@@ -96,7 +96,7 @@ def generate_claude_response(message):
     
     data = {
         "model": "claude-3-5-sonnet-20241022",
-        "max_tokens": 200,
+        "max_tokens": 150,  # Optimizado para velocidad máxima
         "system": system_prompt,
         "messages": [
             {
@@ -152,7 +152,7 @@ def generate_openai_response(message):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": message}
         ],
-        "max_tokens": 300
+        "max_tokens": 200  # Optimizado para velocidad
     }
     
     response = requests.post(url, headers=headers, json=data)
