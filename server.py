@@ -26,7 +26,27 @@ def generate_ai_response(message):
             return generate_openai_response(message)
     except Exception as e:
         print(f"Error generating AI response: {e}")
-        return "Lo siento, no puedo procesar tu solicitud en este momento."
+        # Fallback to simple responses when APIs are not available
+        return generate_fallback_response(message)
+
+def generate_fallback_response(message):
+    """Generate simple fallback responses when APIs are not available"""
+    message_lower = message.lower()
+    
+    if "saluda" in message_lower or "saludo" in message_lower:
+        return "¡Hola! Bienvenido, ¿en qué puedo ayudarte hoy?"
+    elif "ayuda" in message_lower or "ayudar" in message_lower:
+        return "Por supuesto, estoy aquí para ayudarte. ¿Qué necesitas?"
+    elif "información" in message_lower or "info" in message_lower:
+        return "Te puedo proporcionar información básica. ¿Sobre qué tema específicamente?"
+    elif "contacto" in message_lower or "llamar" in message_lower:
+        return "Puedo ayudarte con información de contacto. ¿A quién necesitas contactar?"
+    elif "horario" in message_lower or "hora" in message_lower:
+        return "Nuestro horario de atención es de lunes a viernes de 9 AM a 6 PM."
+    elif "servicio" in message_lower or "servicios" in message_lower:
+        return "Ofrecemos varios servicios. ¿Te interesa conocer más sobre alguno en particular?"
+    else:
+        return "Gracias por tu mensaje. He tomado nota y me pondré en contacto contigo pronto."
 
 def generate_claude_response(message):
     """Generate response using Claude AI"""
