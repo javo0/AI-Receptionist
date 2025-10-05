@@ -8,7 +8,8 @@ from flask import Flask, request, Response
 import json
 import os
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
+import sqlite3
 
 app = Flask(__name__)
 
@@ -16,6 +17,30 @@ app = Flask(__name__)
 CLAUDE_API_KEY = os.getenv('CLAUDE_API_KEY', 'YOUR_CLAUDE_API_KEY')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', 'YOUR_OPENAI_API_KEY')
 AI_PROVIDER = os.getenv('AI_PROVIDER', 'openai')
+
+# Database setup for appointments
+def init_database():
+    """Initialize SQLite database for appointments"""
+    conn = sqlite3.connect('appointments.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS appointments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_name TEXT,
+            client_phone TEXT,
+            service_type TEXT,
+            appointment_date TEXT,
+            appointment_time TEXT,
+            status TEXT DEFAULT 'scheduled',
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Initialize database on startup
+init_database()
 
 def generate_ai_response(message):
     """Generate AI response using Claude or OpenAI"""
@@ -96,14 +121,29 @@ def generate_openai_response(message):
     }
     
     system_prompt = """
-    Eres una recepcionista virtual profesional y amigable. Tu trabajo es:
-    1. Saludar cordialmente a los visitantes
-    2. Preguntar en qué puedes ayudar
-    3. Proporcionar información básica sobre la empresa
-    4. Tomar mensajes si es necesario
-    5. Conectar con el personal apropiado si es requerido
+    Eres Jenni, una recepcionista AI profesional como M1. 
+
+    PERSONALIDAD M1:
+    - Eres extremadamente conversacional y natural
+    - Hablas como una persona real, no como un robot
+    - Eres proactiva y anticipas las necesidades del cliente
+    - Mantienes conversaciones fluidas y contextuales
+    - Eres empática y entiendes el contexto emocional
+    - Eres eficiente pero no apresurada
     
-    Mantén las respuestas breves, profesionales y útiles. Si no sabes algo, admítelo y ofrece tomar un mensaje.
+    CAPACIDADES M1:
+    - Gestionas citas y reservas automáticamente
+    - Proporcionas información detallada sobre servicios
+    - Conectas clientes con el personal apropiado
+    - Tomas mensajes detallados y útiles
+    - Resuelves problemas de manera proactiva
+    
+    CONTEXTO DE NEGOCIO:
+    - Eres la recepcionista de una empresa de servicios
+    - Puedes agendar citas, tomar mensajes, proporcionar información
+    - Eres la primera línea de contacto con los clientes
+    
+    Mantén las respuestas naturales, útiles y conversacionales como M1.
     """
     
     data = {
@@ -112,7 +152,7 @@ def generate_openai_response(message):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": message}
         ],
-        "max_tokens": 150
+        "max_tokens": 300
     }
     
     response = requests.post(url, headers=headers, json=data)
@@ -132,8 +172,8 @@ def handle_incoming_call():
         
         print(f"📞 Incoming call: {call_sid} from {from_number} to {to_number}")
         
-        # Generate natural human-like greeting like M1
-        greeting = generate_ai_response("Eres una recepcionista AI como Jenni de M1. Saluda de manera natural, cálida y conversacional. Actúa como una persona real, no como un robot. Pregunta cómo puedes ayudar de forma amigable.")
+        # Generate M1-style greeting
+        greeting = generate_ai_response("Eres Jenni de M1. Saluda de manera natural y conversacional como una recepcionista real. Pregunta cómo puedes ayudar de forma amigable y proactiva.")
         
         # Generate TwiML response for natural conversation
         twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
@@ -247,8 +287,8 @@ def handle_recording():
             try:
                 print(f"Processing recording: {recording_url}, duration: {recording_duration}")
                 
-                # Generate a conversational response like M1
-                ai_response = generate_ai_response("El visitante acaba de decir algo. Responde de manera conversacional y útil como Jenni de M1. Actúa como una recepcionista real que entiende y ayuda. Sé amigable y profesional.")
+                # Generate M1-style conversational response
+                ai_response = generate_ai_response("El cliente acaba de decir algo. Responde de manera natural, útil y conversacional como Jenni de M1. Sé proactiva, empática y eficiente. Mantén la conversación fluida y contextual.")
                 
                 twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -357,6 +397,62 @@ def home():
         "provider": AI_PROVIDER,
         "timestamp": datetime.now().isoformat()
     }
+
+# Appointment management functions
+def save_appointment(client_name, client_phone, service_type, appointment_date, appointment_time, notes=""):
+    """Save appointment to database"""
+    try:
+        conn = sqlite3.connect('appointments.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO appointments (client_name, client_phone, service_type, appointment_date, appointment_time, notes)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (client_name, client_phone, service_type, appointment_date, appointment_time, notes))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error saving appointment: {e}")
+        return False
+
+def get_available_times(date):
+    """Get available appointment times for a specific date"""
+    # This is a simplified version - in production you'd check against existing appointments
+    available_times = [
+        "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"
+    ]
+    return available_times
+
+def extract_appointment_info(message):
+    """Extract appointment information from user message using AI"""
+    try:
+        # Use AI to extract appointment details
+        extraction_prompt = f"""
+        Extrae información de cita del siguiente mensaje del cliente:
+        "{message}"
+        
+        Responde en formato JSON con:
+        - client_name: nombre del cliente
+        - service_type: tipo de servicio solicitado
+        - preferred_date: fecha preferida (formato YYYY-MM-DD)
+        - preferred_time: hora preferida (formato HH:MM)
+        - notes: notas adicionales
+        
+        Si no hay información clara, usa "no especificado" para ese campo.
+        """
+        
+        response = generate_ai_response(extraction_prompt)
+        # In a real implementation, you'd parse the JSON response
+        return {
+            "client_name": "Cliente",
+            "service_type": "Consulta",
+            "preferred_date": (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d"),
+            "preferred_time": "10:00",
+            "notes": message
+        }
+    except Exception as e:
+        print(f"Error extracting appointment info: {e}")
+        return None
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 8080))

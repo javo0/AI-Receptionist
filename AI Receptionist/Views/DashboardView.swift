@@ -14,89 +14,118 @@ struct DashboardView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            // Dashboard Tab
-            VStack(spacing: 20) {
-                // Status Card
-                VStack(spacing: 16) {
-                    HStack {
-                        Image(systemName: configurationService.isConfigured ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                            .foregroundColor(configurationService.isConfigured ? .green : .orange)
-                            .font(.title2)
-                        
-                        VStack(alignment: .leading) {
-                            Text("AI Receptionist Status")
-                                .font(.headline)
-                            Text(configurationService.isConfigured ? "Configured & Ready" : "Needs Configuration")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
-                    }
-                    
-                    if configurationService.isConfigured {
+            // Dashboard Tab - M1 Style
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Header Section - M1 Style
+                    VStack(spacing: 16) {
                         HStack {
-                            StatusIndicator(isActive: configurationService.configuration?.isActive ?? false)
-                            Text(configurationService.configuration?.isActive == true ? "Active" : "Inactive")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
-                
-                // Stats Cards
-                LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
-                ], spacing: 16) {
-                    StatCard(
-                        title: "Active Calls",
-                        value: "\(callService.activeCalls.count)",
-                        icon: "phone.fill",
-                        color: .green
-                    )
-                    
-                    StatCard(
-                        title: "Total Calls",
-                        value: "\(callService.callHistory.count)",
-                        icon: "phone.arrow.up.right.fill",
-                        color: .blue
-                    )
-                }
-                
-                // Quick Actions
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Quick Actions")
-                        .font(.headline)
-                    
-                    HStack(spacing: 16) {
-                        QuickActionButton(
-                            title: "View Calls",
-                            icon: "phone.fill",
-                            color: .blue
-                        ) {
-                            selectedTab = 1
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("M1 AI Receptionist")
+                                    .font(.largeTitle)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+                                
+                                Text("Your 24/7 AI Receptionist")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            // Status Indicator
+                            VStack(spacing: 4) {
+                                StatusIndicator(isActive: configurationService.configuration?.isActive ?? false)
+                                Text(configurationService.configuration?.isActive == true ? "Active" : "Inactive")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                         
-                        QuickActionButton(
-                            title: "Settings",
-                            icon: "gear.fill",
-                            color: .gray
-                        ) {
-                            selectedTab = 2
+                        // System Status Card - M1 Style
+                        HStack {
+                            Image(systemName: configurationService.isConfigured ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                                .foregroundColor(configurationService.isConfigured ? .green : .orange)
+                                .font(.title2)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("System Status")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                Text(configurationService.isConfigured ? "Configured & Ready" : "Needs Configuration")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color(.systemBackground))
+                                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                        )
+                    }
+                
+                    // Stats Section - M1 Style
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Today's Activity")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        LazyVGrid(columns: [
+                            GridItem(.flexible()),
+                            GridItem(.flexible())
+                        ], spacing: 16) {
+                            StatCard(
+                                title: "Active Calls",
+                                value: "\(callService.activeCalls.count)",
+                                icon: "phone.fill",
+                                color: .green
+                            )
+                            
+                            StatCard(
+                                title: "Total Calls",
+                                value: "\(callService.callHistory.count)",
+                                icon: "phone.arrow.up.right.fill",
+                                color: .blue
+                            )
                         }
                     }
+                
+                    // Quick Actions - M1 Style
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Quick Actions")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        HStack(spacing: 16) {
+                            QuickActionButton(
+                                title: "View Calls",
+                                icon: "phone.fill",
+                                color: .blue
+                            ) {
+                                selectedTab = 1
+                            }
+                            
+                            QuickActionButton(
+                                title: "Settings",
+                                icon: "gear.fill",
+                                color: .gray
+                            ) {
+                                selectedTab = 2
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color(.systemBackground))
+                            .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                    )
                 }
                 .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
-                
-                Spacer()
             }
-            .padding()
             .tabItem {
                 Image(systemName: "house.fill")
                 Text("Dashboard")
@@ -146,23 +175,34 @@ struct StatCard: View {
     let color: Color
     
     var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(color)
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.title2)
+                    .foregroundColor(color)
+                
+                Spacer()
+            }
             
-            Text(value)
-                .font(.title)
-                .fontWeight(.bold)
-            
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(value)
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                
+                Text(title)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        )
     }
 }
 
@@ -174,20 +214,28 @@ struct QuickActionButton: View {
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
+            VStack(spacing: 12) {
                 Image(systemName: icon)
                     .font(.title2)
                     .foregroundColor(color)
                 
                 Text(title)
-                    .font(.caption)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
                     .foregroundColor(.primary)
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color(.systemGray5))
-            .cornerRadius(8)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.systemGray6))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(color.opacity(0.3), lineWidth: 1)
+                    )
+            )
         }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
