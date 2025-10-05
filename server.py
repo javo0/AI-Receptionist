@@ -191,16 +191,42 @@ def handle_recording():
 def process_recording(recording_url):
     """Process the recording and generate AI response"""
     try:
-        # For now, we'll simulate processing
-        # In a real implementation, you would:
-        # 1. Download the recording
-        # 2. Transcribe it using Whisper or similar
-        # 3. Generate AI response
-        
         print(f"Processing recording: {recording_url}")
         
-        # Simulate AI response
-        return "Gracias por tu mensaje. He tomado nota y me pondré en contacto contigo pronto."
+        # Download the recording
+        import requests
+        response = requests.get(recording_url)
+        if response.status_code != 200:
+            print(f"Failed to download recording: {response.status_code}")
+            return "Lo siento, no pude descargar tu mensaje. ¿Podrías repetirlo?"
+        
+        # Save the recording temporarily
+        with open('/tmp/recording.wav', 'wb') as f:
+            f.write(response.content)
+        
+        # Transcribe using OpenAI Whisper
+        try:
+            import openai
+            client = openai.OpenAI(api_key=OPENAI_API_KEY)
+            
+            with open('/tmp/recording.wav', 'rb') as audio_file:
+                transcript = client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file,
+                    language="es"
+                )
+            
+            user_message = transcript.text
+            print(f"Transcribed: {user_message}")
+            
+            # Generate AI response based on the transcription
+            ai_response = generate_ai_response(f"El usuario dijo: {user_message}. Responde de manera útil y profesional.")
+            
+            return ai_response
+            
+        except Exception as e:
+            print(f"Error transcribing: {e}")
+            return "Gracias por tu mensaje. He tomado nota y me pondré en contacto contigo pronto."
         
     except Exception as e:
         print(f"Error processing recording: {e}")
