@@ -175,13 +175,13 @@ def handle_recording():
             try:
                 print(f"Processing recording: {recording_url}, duration: {recording_duration}")
                 
-                # Generate AI response based on the recording
-                ai_response = generate_ai_response("El visitante acaba de decir algo. Responde de manera útil y personalizada como una recepcionista real.")
+                # Generate a more interactive response
+                ai_response = generate_ai_response("El visitante acaba de decir algo. Responde de manera útil y personalizada como una recepcionista real. Sé específica y útil en tu respuesta.")
                 
                 twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice" language="es-MX">{ai_response}</Say>
-    <Pause length="1"/>
+    <Pause length="2"/>
     <Say voice="alice" language="es-MX">¿Hay algo más en lo que pueda ayudarte hoy?</Say>
     <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" />
 </Response>"""
