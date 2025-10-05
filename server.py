@@ -164,10 +164,7 @@ def handle_incoming_call():
         # Generate TwiML response for natural conversation
         twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Gather input="speech" timeout="10" action="/webhook/gather" method="POST">
-        <Say voice="alice" language="es-MX">{greeting}</Say>
-    </Gather>
-    <Say voice="alice" language="es-MX">No pude escucharte bien. ¿Podrías repetir tu solicitud?</Say>
+    <Say voice="alice" language="es-MX">{greeting}</Say>
     <Gather input="speech" timeout="10" action="/webhook/gather" method="POST" />
 </Response>"""
         
@@ -270,11 +267,19 @@ def handle_gather():
         
         if speech_result:
             # Generate response based on speech
-            ai_response = generate_ai_response(f"El cliente dijo: '{speech_result}'. Responde de manera natural y útil como Jenni. Usa expresiones como 'Perfecto', 'Entiendo', 'Claro que sí'. Sé empática y útil. NO repitas la pregunta '¿En qué puedo ayudarte?' - ya la hiciste al inicio.")
-            
-            twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
+            try:
+                ai_response = generate_ai_response(f"El cliente dijo: '{speech_result}'. Responde de manera natural y útil como Jenni. Usa expresiones como 'Perfecto', 'Entiendo', 'Claro que sí'. Sé empática y útil. NO repitas la pregunta '¿En qué puedo ayudarte?' - ya la hiciste al inicio.")
+                
+                twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice" language="es-MX">{ai_response}</Say>
+    <Gather input="speech" timeout="10" action="/webhook/gather" method="POST" />
+</Response>"""
+            except Exception as e:
+                print(f"Error generating AI response: {e}")
+                twiml = """<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="alice" language="es-MX">Perfecto, entiendo. ¿Hay algo más en lo que pueda ayudarte?</Say>
     <Gather input="speech" timeout="10" action="/webhook/gather" method="POST" />
 </Response>"""
         else:
