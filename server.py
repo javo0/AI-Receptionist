@@ -247,8 +247,8 @@ def handle_recording():
             try:
                 print(f"Processing recording: {recording_url}, duration: {recording_duration}")
                 
-                # Generate a natural response
-                ai_response = generate_ai_response("El visitante acaba de decir algo. Responde de manera natural, útil y conversacional como una recepcionista real. Habla como una persona, no como una máquina.")
+                # Generate a more specific response
+                ai_response = generate_ai_response("El visitante acaba de decir algo. Responde de manera útil y específica como una recepcionista real. Sé clara y directa en tu respuesta.")
                 
                 twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
