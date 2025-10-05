@@ -164,8 +164,11 @@ def handle_incoming_call():
         # Generate TwiML response for natural conversation
         twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-    <Say voice="alice" language="es-MX">{greeting}</Say>
-    <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" />
+    <Gather input="speech" timeout="10" action="/webhook/gather" method="POST">
+        <Say voice="alice" language="es-MX">{greeting}</Say>
+    </Gather>
+    <Say voice="alice" language="es-MX">No pude escucharte bien. ¿Podrías repetir tu solicitud?</Say>
+    <Gather input="speech" timeout="10" action="/webhook/gather" method="POST" />
 </Response>"""
         
         return Response(twiml, mimetype='text/xml')
@@ -256,6 +259,38 @@ def handle_gather():
 </Response>"""
         return Response(twiml, mimetype='text/xml')
 
+@app.route('/webhook/gather', methods=['POST'])
+def handle_gather():
+    """Handle speech input from Gather"""
+    try:
+        speech_result = request.form.get('SpeechResult', '')
+        call_sid = request.form.get('CallSid')
+        
+        print(f"🎤 Speech received: {speech_result} for call {call_sid}")
+        
+        if speech_result:
+            # Generate response based on speech
+            ai_response = generate_ai_response(f"El cliente dijo: '{speech_result}'. Responde de manera natural y útil como Jenni. Usa expresiones como 'Perfecto', 'Entiendo', 'Claro que sí'. Sé empática y útil. NO repitas la pregunta '¿En qué puedo ayudarte?' - ya la hiciste al inicio.")
+            
+            twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="alice" language="es-MX">{ai_response}</Say>
+    <Gather input="speech" timeout="10" action="/webhook/gather" method="POST" />
+</Response>"""
+        else:
+            # No speech detected
+            twiml = """<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="alice" language="es-MX">No pude escucharte bien. ¿Podrías repetir tu solicitud?</Say>
+    <Gather input="speech" timeout="10" action="/webhook/gather" method="POST" />
+</Response>"""
+        
+        return Response(twiml, mimetype='text/xml')
+        
+    except Exception as e:
+        print(f"Error handling gather: {e}")
+        return Response("Error", status=500)
+
 @app.route('/webhook/recording', methods=['POST'])
 def handle_recording():
     """Handle recording from Twilio"""
@@ -290,7 +325,7 @@ def handle_recording():
                 twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice" language="es-MX">{ai_response}</Say>
-    <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" />
+    <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" playBeep="false" />
 </Response>"""
             except Exception as e:
                 print(f"Error processing recording: {e}")
