@@ -132,8 +132,8 @@ def handle_incoming_call():
         
         print(f"📞 Incoming call: {call_sid} from {from_number} to {to_number}")
         
-        # Generate natural human-like greeting
-        greeting = generate_ai_response("Eres una recepcionista humana real, no un robot. Saluda de manera natural, cálida y personal como si fueras una persona real. Pregunta cómo puedes ayudar de forma conversacional.")
+        # Generate natural human-like greeting like M1
+        greeting = generate_ai_response("Eres una recepcionista AI como Jenni de M1. Saluda de manera natural, cálida y conversacional. Actúa como una persona real, no como un robot. Pregunta cómo puedes ayudar de forma amigable.")
         
         # Generate TwiML response for natural conversation
         twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
@@ -247,8 +247,8 @@ def handle_recording():
             try:
                 print(f"Processing recording: {recording_url}, duration: {recording_duration}")
                 
-                # Generate a more specific response
-                ai_response = generate_ai_response("El visitante acaba de decir algo. Responde de manera útil y específica como una recepcionista real. Sé clara y directa en tu respuesta.")
+                # Generate a conversational response like M1
+                ai_response = generate_ai_response("El visitante acaba de decir algo. Responde de manera conversacional y útil como Jenni de M1. Actúa como una recepcionista real que entiende y ayuda. Sé amigable y profesional.")
                 
                 twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
