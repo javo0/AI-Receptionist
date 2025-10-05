@@ -114,13 +114,15 @@ def handle_incoming_call():
         # Generate greeting
         greeting = generate_ai_response("Saluda al visitante que acaba de llamar")
         
-        # Generate TwiML response
+        # Generate TwiML response with better configuration
         twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice" language="es-MX">{greeting}</Say>
-    <Pause length="1"/>
-    <Say voice="alice" language="es-MX">¿En qué puedo ayudarte?</Say>
-    <Record maxLength="30" action="/webhook/recording" method="POST" />
+    <Pause length="2"/>
+    <Say voice="alice" language="es-MX">¿En qué puedo ayudarte? Por favor, habla después del tono.</Say>
+    <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" 
+            recordingStatusCallback="/webhook/recording-status" 
+            recordingStatusCallbackMethod="POST" />
 </Response>"""
         
         return Response(twiml, mimetype='text/xml')
@@ -131,7 +133,9 @@ def handle_incoming_call():
         twiml = """<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice" language="es-MX">Hola, soy tu recepcionista virtual. ¿En qué puedo ayudarte?</Say>
-    <Record maxLength="30" action="/webhook/recording" method="POST" />
+    <Pause length="2"/>
+    <Say voice="alice" language="es-MX">Por favor, habla después del tono.</Say>
+    <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" />
 </Response>"""
         return Response(twiml, mimetype='text/xml')
 
@@ -141,14 +145,36 @@ def handle_recording():
     try:
         recording_url = request.form.get('RecordingUrl')
         call_sid = request.form.get('CallSid')
+        recording_duration = request.form.get('RecordingDuration')
         
-        print(f"🎙️ Recording received: {recording_url} for call {call_sid}")
+        print(f"🎙️ Recording received: {recording_url} for call {call_sid}, duration: {recording_duration}")
         
-        # For now, just acknowledge the recording
-        twiml = """<?xml version="1.0" encoding="UTF-8"?>
+        if recording_url and recording_duration and int(recording_duration) > 0:
+            # Process the recording
+            try:
+                # Download and process the recording
+                response_text = process_recording(recording_url)
+                
+                twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="alice" language="es-MX">Entendí: {response_text}</Say>
+    <Pause length="1"/>
+    <Say voice="alice" language="es-MX">¿Hay algo más en lo que pueda ayudarte?</Say>
+    <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" />
+</Response>"""
+            except Exception as e:
+                print(f"Error processing recording: {e}")
+                twiml = """<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice" language="es-MX">Gracias por tu mensaje. Lo procesaré y me pondré en contacto contigo pronto.</Say>
     <Hangup/>
+</Response>"""
+        else:
+            # No recording or empty recording
+            twiml = """<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="alice" language="es-MX">No pude escuchar tu mensaje. ¿Podrías repetirlo?</Say>
+    <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" />
 </Response>"""
         
         return Response(twiml, mimetype='text/xml')
@@ -161,6 +187,40 @@ def handle_recording():
     <Hangup/>
 </Response>"""
         return Response(twiml, mimetype='text/xml')
+
+def process_recording(recording_url):
+    """Process the recording and generate AI response"""
+    try:
+        # For now, we'll simulate processing
+        # In a real implementation, you would:
+        # 1. Download the recording
+        # 2. Transcribe it using Whisper or similar
+        # 3. Generate AI response
+        
+        print(f"Processing recording: {recording_url}")
+        
+        # Simulate AI response
+        return "Gracias por tu mensaje. He tomado nota y me pondré en contacto contigo pronto."
+        
+    except Exception as e:
+        print(f"Error processing recording: {e}")
+        return "Lo siento, no pude procesar tu mensaje. ¿Podrías repetirlo?"
+
+@app.route('/webhook/recording-status', methods=['POST'])
+def handle_recording_status():
+    """Handle recording status updates"""
+    try:
+        call_sid = request.form.get('CallSid')
+        recording_status = request.form.get('RecordingStatus')
+        recording_url = request.form.get('RecordingUrl')
+        
+        print(f"📊 Recording status: {recording_status} for call {call_sid}, URL: {recording_url}")
+        
+        return "OK"
+        
+    except Exception as e:
+        print(f"Error handling recording status: {e}")
+        return "OK"
 
 @app.route('/health', methods=['GET'])
 def health_check():
