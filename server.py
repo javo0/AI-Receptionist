@@ -175,17 +175,8 @@ def handle_recording():
             try:
                 print(f"Processing recording: {recording_url}, duration: {recording_duration}")
                 
-                # Simulate different responses based on what the user might have said
-                import random
-                responses = [
-                    "Entiendo perfectamente. ¿Te puedo ayudar con algo específico?",
-                    "Gracias por tu consulta. ¿Hay algo más en lo que pueda asistirte?",
-                    "Perfecto, he tomado nota de tu solicitud. ¿Necesitas algo más?",
-                    "Excelente, te ayudo con eso. ¿Hay algo adicional que requieras?",
-                    "Entendido, ¿en qué más puedo ser útil para ti?"
-                ]
-                
-                ai_response = random.choice(responses)
+                # Generate AI response based on the recording
+                ai_response = generate_ai_response("El visitante acaba de decir algo. Responde de manera útil y personalizada como una recepcionista real.")
                 
                 twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
