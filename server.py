@@ -87,10 +87,11 @@ def generate_claude_response(message):
 
     INSTRUCCIONES:
     - Usa expresiones como "¡Hola!", "Perfecto", "Claro que sí", "¡Genial!"
-    - Haz preguntas amigables: "¿Cómo estás?", "¿En qué te ayudo?"
     - Sé empática y útil
     - Habla como una persona real, no como un robot
     - Mantén un tono cálido y profesional
+    - NO repitas preguntas que ya hiciste
+    - Responde específicamente a lo que dice el cliente
     """
     
     data = {
@@ -124,10 +125,11 @@ def generate_openai_response(message):
 
     INSTRUCCIONES:
     - Usa expresiones como "¡Hola!", "Perfecto", "Claro que sí", "¡Genial!"
-    - Haz preguntas amigables: "¿Cómo estás?", "¿En qué te ayudo?"
     - Sé empática y útil
     - Habla como una persona real, no como un robot
     - Mantén un tono cálido y profesional
+    - NO repitas preguntas que ya hiciste
+    - Responde específicamente a lo que dice el cliente
     """
     
     data = {
@@ -157,7 +159,7 @@ def handle_incoming_call():
         print(f"📞 Incoming call: {call_sid} from {from_number} to {to_number}")
         
         # Generate human-like greeting
-        greeting = "¡Hola! Soy Jenni, tu recepcionista virtual. ¿Cómo estás? ¿En qué puedo ayudarte hoy?"
+        greeting = "¡Hola! Soy Jenni, tu recepcionista virtual. ¿En qué puedo ayudarte hoy?"
         
         # Generate TwiML response for natural conversation
         twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
@@ -279,11 +281,11 @@ def handle_recording():
                     print(f"Transcription: {transcription}")
                     
                     # Generate response based on transcription
-                    ai_response = generate_ai_response(f"El cliente dijo: '{transcription}'. Responde de manera natural y útil como Jenni. Usa expresiones como 'Perfecto', 'Entiendo', 'Claro que sí'. Sé empática y útil.")
+                    ai_response = generate_ai_response(f"El cliente dijo: '{transcription}'. Responde de manera natural y útil como Jenni. Usa expresiones como 'Perfecto', 'Entiendo', 'Claro que sí'. Sé empática y útil. NO repitas la pregunta '¿En qué puedo ayudarte?' - ya la hiciste al inicio.")
                 except Exception as e:
                     print(f"Error transcribing: {e}")
                     # Fallback response
-                    ai_response = generate_ai_response("El cliente acaba de hablar. Responde de manera natural y útil como Jenni. Usa expresiones como 'Perfecto', 'Entiendo', 'Claro que sí'. Sé empática y útil.")
+                    ai_response = generate_ai_response("El cliente acaba de hablar. Responde de manera natural y útil como Jenni. Usa expresiones como 'Perfecto', 'Entiendo', 'Claro que sí'. Sé empática y útil. NO repitas la pregunta '¿En qué puedo ayudarte?' - ya la hiciste al inicio.")
                 
                 twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
