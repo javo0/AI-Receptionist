@@ -165,7 +165,7 @@ def handle_incoming_call():
         twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice" language="es-MX">{greeting}</Say>
-    <Gather input="speech" timeout="10" action="/webhook/gather" method="POST" />
+    <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" playBeep="false" />
 </Response>"""
         
         return Response(twiml, mimetype='text/xml')
@@ -265,29 +265,11 @@ def handle_gather():
         
         print(f"🎤 Speech received: {speech_result} for call {call_sid}")
         
-        if speech_result:
-            # Generate response based on speech
-            try:
-                ai_response = generate_ai_response(f"El cliente dijo: '{speech_result}'. Responde de manera natural y útil como Jenni. Usa expresiones como 'Perfecto', 'Entiendo', 'Claro que sí'. Sé empática y útil. NO repitas la pregunta '¿En qué puedo ayudarte?' - ya la hiciste al inicio.")
-                
-                twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-    <Say voice="alice" language="es-MX">{ai_response}</Say>
-    <Gather input="speech" timeout="10" action="/webhook/gather" method="POST" />
-</Response>"""
-            except Exception as e:
-                print(f"Error generating AI response: {e}")
-                twiml = """<?xml version="1.0" encoding="UTF-8"?>
+        # Simple response
+        twiml = """<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice" language="es-MX">Perfecto, entiendo. ¿Hay algo más en lo que pueda ayudarte?</Say>
-    <Gather input="speech" timeout="10" action="/webhook/gather" method="POST" />
-</Response>"""
-        else:
-            # No speech detected
-            twiml = """<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-    <Say voice="alice" language="es-MX">No pude escucharte bien. ¿Podrías repetir tu solicitud?</Say>
-    <Gather input="speech" timeout="10" action="/webhook/gather" method="POST" />
+    <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" playBeep="false" />
 </Response>"""
         
         return Response(twiml, mimetype='text/xml')
@@ -311,21 +293,8 @@ def handle_recording():
             try:
                 print(f"Processing recording: {recording_url}, duration: {recording_duration}")
                 
-                # Download and transcribe the recording
-                try:
-                    import urllib.request
-                    audio_data = urllib.request.urlopen(recording_url).read()
-                    
-                    # Transcribe using OpenAI Whisper
-                    transcription = transcribe_audio(audio_data)
-                    print(f"Transcription: {transcription}")
-                    
-                    # Generate response based on transcription
-                    ai_response = generate_ai_response(f"El cliente dijo: '{transcription}'. Responde de manera natural y útil como Jenni. Usa expresiones como 'Perfecto', 'Entiendo', 'Claro que sí'. Sé empática y útil. NO repitas la pregunta '¿En qué puedo ayudarte?' - ya la hiciste al inicio.")
-                except Exception as e:
-                    print(f"Error transcribing: {e}")
-                    # Fallback response
-                    ai_response = generate_ai_response("El cliente acaba de hablar. Responde de manera natural y útil como Jenni. Usa expresiones como 'Perfecto', 'Entiendo', 'Claro que sí'. Sé empática y útil. NO repitas la pregunta '¿En qué puedo ayudarte?' - ya la hiciste al inicio.")
+                # Generate response without transcription for now
+                ai_response = generate_ai_response("Responde como Jenni, una recepcionista real. Usa expresiones como 'Perfecto', 'Entiendo', 'Claro que sí'. Sé empática y útil.")
                 
                 twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
