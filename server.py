@@ -163,8 +163,6 @@ def handle_incoming_call():
         twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice" language="es-MX">{greeting}</Say>
-    <Pause length="1"/>
-    <Say voice="alice" language="es-MX">¿En qué puedo ayudarte hoy?</Say>
     <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" />
 </Response>"""
         
@@ -271,14 +269,25 @@ def handle_recording():
             try:
                 print(f"Processing recording: {recording_url}, duration: {recording_duration}")
                 
-                # Generate human conversational response
-                ai_response = generate_ai_response("Responde como Jenni, una recepcionista real. Usa expresiones naturales como 'Perfecto', 'Entiendo', 'Claro que sí', '¡Genial!'. Sé empática, útil y conversacional. Habla como una persona real, no como un robot.")
+                # Download and transcribe the recording
+                try:
+                    import urllib.request
+                    audio_data = urllib.request.urlopen(recording_url).read()
+                    
+                    # Transcribe using OpenAI Whisper
+                    transcription = transcribe_audio(audio_data)
+                    print(f"Transcription: {transcription}")
+                    
+                    # Generate response based on transcription
+                    ai_response = generate_ai_response(f"El cliente dijo: '{transcription}'. Responde de manera natural y útil como Jenni. Usa expresiones como 'Perfecto', 'Entiendo', 'Claro que sí'. Sé empática y útil.")
+                except Exception as e:
+                    print(f"Error transcribing: {e}")
+                    # Fallback response
+                    ai_response = generate_ai_response("El cliente acaba de hablar. Responde de manera natural y útil como Jenni. Usa expresiones como 'Perfecto', 'Entiendo', 'Claro que sí'. Sé empática y útil.")
                 
                 twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice" language="es-MX">{ai_response}</Say>
-    <Pause length="1"/>
-    <Say voice="alice" language="es-MX">¿Hay algo más en lo que pueda ayudarte?</Say>
     <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" />
 </Response>"""
             except Exception as e:
@@ -406,6 +415,36 @@ def get_available_times(date):
         "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"
     ]
     return available_times
+
+def transcribe_audio(audio_data):
+    """Transcribe audio using OpenAI Whisper"""
+    try:
+        import base64
+        
+        # Encode audio data
+        audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+        
+        # Call OpenAI Whisper API
+        url = "https://api.openai.com/v1/audio/transcriptions"
+        headers = {
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+        }
+        
+        files = {
+            'file': ('audio.wav', audio_data, 'audio/wav'),
+            'model': (None, 'whisper-1'),
+            'language': (None, 'es')
+        }
+        
+        response = requests.post(url, headers=headers, files=files)
+        response.raise_for_status()
+        
+        result = response.json()
+        return result.get('text', 'No se pudo transcribir')
+        
+    except Exception as e:
+        print(f"Error transcribing audio: {e}")
+        return "No se pudo transcribir el audio"
 
 def extract_appointment_info(message):
     """Extract appointment information from user message using AI"""
