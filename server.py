@@ -111,15 +111,15 @@ def handle_incoming_call():
         
         print(f"📞 Incoming call: {call_sid} from {from_number} to {to_number}")
         
-        # Generate greeting as a professional receptionist
-        greeting = generate_ai_response("Eres una recepcionista virtual profesional. Saluda al visitante que acaba de llamar de manera amable y profesional, y pregúntale en qué puedes ayudarle.")
+        # Generate natural human-like greeting
+        greeting = generate_ai_response("Eres una recepcionista humana real, no un robot. Saluda de manera natural, cálida y personal como si fueras una persona real. Pregunta cómo puedes ayudar de forma conversacional.")
         
         # Generate TwiML response with better configuration
         twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice" language="es-MX">{greeting}</Say>
     <Pause length="2"/>
-    <Say voice="alice" language="es-MX">¿En qué puedo ayudarte? Por favor, habla después del tono.</Say>
+    <Say voice="alice" language="es-MX">¿En qué puedo ayudarte hoy?</Say>
     <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" 
             recordingStatusCallback="/webhook/recording-status" 
             recordingStatusCallbackMethod="POST" />
@@ -178,14 +178,14 @@ def handle_recording():
                         user_message = transcript.text
                         print(f"Transcribed: {user_message}")
                         
-                        # Generate professional receptionist response
-                        ai_response = generate_ai_response(f"Eres una recepcionista virtual profesional. El visitante dijo: '{user_message}'. Responde de manera útil, profesional y amable como una recepcionista real.")
+                        # Generate natural human-like response
+                        ai_response = generate_ai_response(f"Eres una recepcionista humana real, no un robot. El visitante dijo: '{user_message}'. Responde de manera natural, conversacional y humana. Habla como una persona real, no como una máquina. Sé cálida, útil y natural en tu respuesta.")
                         
                         twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice" language="es-MX">{ai_response}</Say>
     <Pause length="2"/>
-    <Say voice="alice" language="es-MX">¿Hay algo más en lo que pueda ayudarte?</Say>
+    <Say voice="alice" language="es-MX">¿Hay algo más en lo que pueda ayudarte hoy?</Say>
     <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" />
 </Response>"""
                     else:
@@ -194,7 +194,7 @@ def handle_recording():
 <Response>
     <Say voice="alice" language="es-MX">Gracias por tu mensaje. He tomado nota y me pondré en contacto contigo pronto.</Say>
     <Pause length="1"/>
-    <Say voice="alice" language="es-MX">¿Hay algo más en lo que pueda ayudarte?</Say>
+    <Say voice="alice" language="es-MX">¿Hay algo más en lo que pueda ayudarte hoy?</Say>
     <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" />
 </Response>"""
                 except Exception as e:
@@ -203,7 +203,7 @@ def handle_recording():
 <Response>
     <Say voice="alice" language="es-MX">Gracias por tu mensaje. He tomado nota y me pondré en contacto contigo pronto.</Say>
     <Pause length="1"/>
-    <Say voice="alice" language="es-MX">¿Hay algo más en lo que pueda ayudarte?</Say>
+    <Say voice="alice" language="es-MX">¿Hay algo más en lo que pueda ayudarte hoy?</Say>
     <Record maxLength="30" timeout="10" action="/webhook/recording" method="POST" />
 </Response>"""
             except Exception as e:
